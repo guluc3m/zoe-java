@@ -1,2 +1,4 @@
 # zoe-java
-Java library for Zoe
+Java library for Zoe.
+Dependencies:
+- 
