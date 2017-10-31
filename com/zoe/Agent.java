@@ -1,7 +1,9 @@
 package com.zoe;
+
 import java.io.IOException;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 import org.json.JSONObject;
@@ -9,31 +11,25 @@ import org.json.JSONObject;
 import com.rabbitmq.client.*;
 
 /**
- * This class defines the basic agent model of Zoe, without specifying its behavior.
+ * This class defines an Agent, the core of the Zoe library.
  * 
- * This class consists of attributes and two separate <code>Threads</code>: 
- * 		one handled by the <code>rabbitmq</code> library used to consume messages, 
- * 		and the other included in the class object used to publish them, of type {@link Publisher}.
- * The <code>Agent</code> is supposed to receive messages at the same time that delivers them. 
- * When a message is received, whether it is an <code>{@link Intent}</code> or some raw JSON is checked.
- * If it happens to be the first, it will resolve it as specified in <code>{@link #intentResolver(Intent)}</code>; 
- * else, it will try to process it through the method <code>{@link #pendingResolver(JSONObject)}</code>. 
- * The unresolved intents are supposed to be stored in the <code>Queue {@link #unresolved}</code>, as there is 
- * where the <code>{@link #pendingResolver(JSONObject)}</code> will look up for pending intents
- * This can be useful when trying to implement nested intent resolvers.
+ * To create an Agent:
+ *  - First, create an object of type this class (i.e. <code>{@link Agent}</code>)
+ *  - Add resolvers (i.e., classes implementing <code>{@link Resolver}</code>) via the method <code>{@link Agent#addResolver(Resolver)}</code>)
+ *  - Start the agent through <code>{@link Agent#start()}</code> in the main thread
  * 
  * @author danoloan10
- * @version v0.0.1
+ * @version v0.1
  * @since 25th October, 2017
  */
 
-public abstract class Agent{
+public class Agent{
 	private String name = "agent";
 	private Publisher publisher = new Publisher(this);
-	private Queue<Intent> unresolved = new LinkedList<Intent>();
+	private Map<String, Resolver> resolvers = new HashMap<String, Resolver>();
 	private Consumer con;
 
-	protected RabbitMQClient rabbitClient;
+	private RabbitMQClient rabbitClient;
 	
 	/**
 	 * Default and only constructor
@@ -52,22 +48,48 @@ public abstract class Agent{
 			public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
 				//handler() call
 				handler(consumerTag, envelope, properties, body);
-				JSONObject json = null;
+				Intent intent;
 				try{
-					//if the message is an integer, pass it to the intent resolver
-					json = intentResolver(Util.bytesToIntent(body));
-				}catch(NotAnIntentException ex){
-					//if the message is not an intent, pass it to the pending resolver
-					json = pendingResolver(new JSONObject(body));
-				}
-				if(json != null) {
-					//Publish only in case there is something to publish
-					publish(json);
-				}
+					intent = intentResolver(Util.bytesToJSON(body));
+					resolve(intent, Util.bytesToJSON(body));
+				}catch(NotAnIntentException ex){}		
 			}		
 		};
 	}
 	
+	private void resolve(Intent intent, JSONObject json){
+		for(String r : resolvers.keySet()){
+			if(r.equals(intent.name)){
+				JSONObject resolved = resolvers.get(r).resolve(intent, json);
+				publish(resolved);
+				return; //To avoid duplicate resolutions
+			}
+		}	
+	}
+	
+	//This method searches for an intent recursively, from left to right, in depth, until it reaches a valid one; and returns it
+	private Intent intentResolver(JSONObject json) throws NotAnIntentException{
+		Iterator<String> i = json.keys(); //Iterator
+		while(i.hasNext()){
+			String key = i.next(); //Current key
+			if(json.get(key) instanceof JSONObject){
+				try{
+					//If we find a JSONObject, we try to find there some Intents
+					return intentResolver(json.getJSONObject(key));
+				}catch(Exception ex){
+					//An exception will be thrown if we have reached and object with no more nested jsons, and that object is not an intent.
+					continue;
+				}
+			}			
+		}
+		//This will return the proper Intent, or throw an exception if the end is not an intent (i don't 100% trust either, but it works haha)
+		return new Intent(json);
+	}
+	
+	/**
+	 * Start the Agent, i.e., start listening and publishing
+	 * @throws IOException
+	 */
 	public void start() throws IOException{
 		rabbitClient.startConsuming(con);
 		publisher.start();
@@ -85,41 +107,20 @@ public abstract class Agent{
 	 * @param body
 	 * @throws IOException
 	 */
-	protected void handler(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException{}
+	public void handler(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException{}
 	
 	/**
-	 * Returns a JSON, result of some <code>{@link Intent}</code> passed as a parameter.
+	 * Adds a <code>{@link Resolver}</code> to the resolver list.
 	 * 
-	 * When this function is specified, it should filter the intents by their name, and also should expect some defined fields in the JSON received
+	 * Resolvers will be chosen by the API to resolve intents based on their name.
+	 * This method is idempotent, i.e., already registered resolvers will not be added.
 	 * 
-	 * @param intent The <code>{@link Intent}</code> to be resolved
-	 * @return
+	 * @param resolver Resolver class that implements the intent solution
 	 */
-	protected abstract JSONObject intentResolver(Intent intent);
-	
-	/**
-	 * Method called when a JSON arrives that is not an <code>{@link Intent}</code>
-	 * 
-	 * This method should be overrided if developing a nested-intent <code>{@link Agent}</code> 
-	 * to define how the resolved inner intents should be included into the resolution of the pending intents of the agent.
-	 * 
-	 * @param json The non-intent JSON
-	 * @return The first unresolved <code>{@link Intent}</code>
-	 */
-	protected JSONObject pendingResolver(JSONObject json){
-		if(!unresolved.isEmpty()) return unresolved.poll();
-		return null;
-	}
-	
-	/**
-	 * Adds an <code>{@link Intent}</code> to the pending list.
-	 * 
-	 * Intents should only be added to the pending list if they are unresolved until other intent is resolved, i.e.: if they are nested
-	 * 
-	 * @param intent Nested intent pending resolution
-	 */
-	protected void addPending(Intent intent){
-		unresolved.add(intent);
+	public void addResolver(Resolver resolver){
+		if(!resolvers.containsKey(resolver.name())){
+			resolvers.put(resolver.name(), resolver);
+		}
 	}
 	
 	/**
@@ -141,5 +142,6 @@ public abstract class Agent{
 	
 	public void finalize() throws IOException, TimeoutException{
 		rabbitClient.close();
+		resolvers.clear();
 	}
 }

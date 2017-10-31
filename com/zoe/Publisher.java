@@ -44,7 +44,8 @@ public class Publisher extends Thread{
 		while(true){
 			if(!messages.isEmpty()){
 				try {
-					agent.rabbitClient.publish(messages.poll());
+					byte[] message = messages.poll();
+					agent.getClient().publish(message);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

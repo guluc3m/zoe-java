@@ -17,8 +17,7 @@ public class Intent extends JSONObject{
 	/**
 	 * Creates an <code>{@link Intent}</code> from a given JSON.
 	 * 
-	 * If the JSON provided does not have an 'intent' field, null is assigned to the name, as a flag indicating
-	 * it is not an intent.
+	 * If the JSON provided does not have an 'intent' field, an exception is thrown.
 	 * 
 	 * @param json the JSON to be used to create the intent
 	 * @throws NotAnIntentException 
