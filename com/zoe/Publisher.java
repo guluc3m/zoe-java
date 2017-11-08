@@ -45,6 +45,7 @@ public class Publisher extends Thread{
 			if(!messages.isEmpty()){
 				try {
 					byte[] message = messages.poll();
+					System.out.println("published: "+new String(message));
 					agent.getClient().publish(message);
 				} catch (Exception e) {
 					e.printStackTrace();

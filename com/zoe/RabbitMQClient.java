@@ -11,12 +11,13 @@ import com.rabbitmq.client.*;
  * 
  * @author danoloan10
  * @since 25th October, 2017
- * @version v0.0.1
+ * @version v0.1
  */
 
 public class RabbitMQClient{
 	//Names compatible with the python library
-    private final String QUEUE = "zoemessages";
+    @SuppressWarnings("unused")
+	private final String QUEUE = "zoemessages";  //Not used... yet
     private final String ROUTING_KEY = "zoemessages";
     private final String EXCHANGE = "zoeexchange";
     

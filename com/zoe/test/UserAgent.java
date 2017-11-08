@@ -27,7 +27,7 @@ public class UserAgent{
 			@Override
 			public void handler(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException{
 				 //Here, the handler can be overwritten
-				System.out.println(new String(body));
+				System.out.println("Received: "+new String(body));
 			}
 		};
 				
@@ -40,9 +40,13 @@ public class UserAgent{
 		JSONObject json = new JSONObject();
 		json.put("intent", "user.get");
 		json.put("name", "hola");
+		JSONObject json2 = new JSONObject();
+		json2.put("intent", "user.get");
+		json2.put("name", "adios");
 		//this json has the previous intent nested inside it
 		JSONObject out = new JSONObject();
 		out.put("e", json);
+		out.put("b", json2);
 		userAgent.publish(json);
 		userAgent.publish(out);
 	}

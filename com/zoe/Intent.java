@@ -9,7 +9,7 @@ import org.json.JSONObject;
  * If there is no such field in the JSON, the name will be null, declaring thus that the JSON provided should not be an intent.
  * 
  * @author danoloan10
- * @version v0.0.1
+ * @version v0.1
  * @since 25th October, 2017
  */
 public class Intent extends JSONObject{
