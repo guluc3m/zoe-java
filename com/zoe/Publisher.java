@@ -21,7 +21,7 @@ public class Publisher extends Thread{
 	 * 
 	 * All instances of <code>{@link Publisher}</code> depend on and instance of <code>{@link Agent}</code>, that is the one handling the connections.
 	 * 
-	 * @param agent
+	 * @param agent the agent handling the connections
 	 */
 	public Publisher(Agent agent){
 		this.agent = agent;
@@ -45,7 +45,6 @@ public class Publisher extends Thread{
 			if(!messages.isEmpty()){
 				try {
 					byte[] message = messages.poll();
-					System.out.println("published: "+new String(message));
 					agent.getClient().publish(message);
 				} catch (Exception e) {
 					e.printStackTrace();

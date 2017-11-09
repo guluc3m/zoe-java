@@ -71,16 +71,11 @@ public class Agent{
 		String[] keys = new String[1];
 		keys = json.keySet().toArray(keys);
 		keys = Util.sortAlphabetically(keys);
-		System.out.print("keys to scan: ");
-		for(String s : keys) System.out.print(s+" "); //TODO DEBUG
-		System.out.println();
 		for(int i = 0; i < keys.length; i++){
 			String key = keys[i]; //Current key
-			System.out.println("scanning key: "+key);
 			if(json.get(key) instanceof JSONObject){
 				try{
 					//If we find a JSONObject, we try to find there some Intents
-					System.out.println("returned: "+key);
 					return intentResolver(json.getJSONObject(key));
 				}catch(Exception ex){
 					//An exception will be thrown if we have reached and object with no more nested jsons, and that object is not an intent.
