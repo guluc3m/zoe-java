@@ -10,7 +10,7 @@ import java.util.Queue;
  * @author danoloan10
  *
  */
-public class Publisher extends Thread{
+public class Publisher {
 	private Agent agent;
 	
 	//TODO Esta Queue se podría sustituir por una BlockingQueue
@@ -36,21 +36,20 @@ public class Publisher extends Thread{
 	 * @return true if it could be added, false if not.
 	 */
 	public boolean queueMessage(byte[] mes){
-		return messages.add(mes);
+		boolean b = messages.add(mes);
+		if(b) commitMessages();
+		return b;
 	}
-	
-	@Override
-	public void run() {
-		while(true){
-			if(!messages.isEmpty()){
-				try {
-					byte[] message = messages.poll();
-					agent.getClient().publish(message);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+	private void commitMessages(){
+		while(!messages.isEmpty()){
+			byte[] message = messages.poll();
+			try {
+				agent.getClient().publish(message);
+				//System.out.println("Sent: "+new String(message));
+			} catch (Exception e) {
+				messages.add(message);
+				e.printStackTrace();
 			}
 		}
 	}
-
 }

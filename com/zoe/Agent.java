@@ -46,28 +46,52 @@ public class Agent{
 			@Override
 			public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
 				//handler() call
+
+				JSONObject message = Util.bytesToJSON(body);
 				handler(consumerTag, envelope, properties, body);
-				Intent intent;
 				try{
-					intent = intentResolver(Util.bytesToJSON(body));
-					resolve(intent, Util.bytesToJSON(body));
-				}catch(NotAnIntentException ex){}		
+					publish(intentResolver(message));
+				}catch(Exception ex){
+				}		
 			}		
 		};
 	}
-	
-	private void resolve(Intent intent, JSONObject json){
+	/**
+	 * This method resolves an intent and returns the resolution
+	 * @param intent Intent to resolve
+	 * @param main Main message where the intent is
+	 * @return Resolved intent
+	 * @throws NoResolverException
+	 */
+	private JSONObject resolve(Intent intent, JSONObject main) throws NoResolverException{
 		for(String r : resolvers.keySet()){
 			if(r.equals(intent.name)){
-				JSONObject resolved = resolvers.get(r).resolve(intent, json);
-				publish(resolved);
-				return; //To avoid duplicate resolutions
+				JSONObject resolved = resolvers.get(r).resolve(intent, main);
+				resolved.put("data", name);
+				return resolved;
 			}
 		}	
+		throw new NoResolverException();
 	}
 	
-	//This method searches for an intent recursively, from left to right, in depth, until it reaches a valid one; and returns it
-	private Intent intentResolver(JSONObject json) throws NotAnIntentException{
+	/**
+	 * This method will search for intents and resolve the appropriate one in the JSON json
+	 * @param json The message to resolve
+	 * @return Resolved message
+	 * @throws NotAnIntentException
+	 * @throws NoResolverException
+	 */
+	private JSONObject intentResolver(JSONObject json) throws NotAnIntentException, NoResolverException{ return intentResolver(json, json); }
+	
+	/**
+	 * This method searches for an intent recursively, from left to right, in depth, until it reaches a valid one; and returns the main json with the intent resolved
+	 * @param json The intent to resolve
+	 * @param main The main message where the intent is
+	 * @return The main message resolved
+	 * @throws NotAnIntentException
+	 * @throws NoResolverException
+	 */
+	private JSONObject intentResolver(JSONObject json, JSONObject main) throws NotAnIntentException, NoResolverException{
 		String[] keys = new String[1];
 		keys = json.keySet().toArray(keys);
 		keys = Util.sortAlphabetically(keys);
@@ -75,25 +99,38 @@ public class Agent{
 			String key = keys[i]; //Current key
 			if(json.get(key) instanceof JSONObject){
 				try{
-					//If we find a JSONObject, we try to find there some Intents
-					return intentResolver(json.getJSONObject(key));
-				}catch(Exception ex){
+					//If we find a JSONObject, we try to find there some Intents. If there are, they will be resolved
+					return intentResolver(json.getJSONObject(key), main);					
+				}catch(NotAnIntentException ex){
 					//An exception will be thrown if we have reached and object with no more nested jsons, and that object is not an intent.
 					continue;
 				}
 			}			
 		}
-		//This will return the proper Intent, or throw an exception if the end is not an intent (i don't 100% trust either, but it works haha)
-		return new Intent(json);
+		
+		//We resolve the intent and substitute it with the resolution 		
+		JSONObject resolved = resolve(new Intent(json), main);
+		String[] kk = new String[1];
+		kk = json.keySet().toArray(kk);
+		for(String k : kk){
+			json.remove(k);
+		}
+		kk = new String[1];
+		kk = resolved.keySet().toArray(kk);
+		for(String k : kk){
+			json.put(k, resolved.get(k));
+		}
+		
+		return main;
 	}
+
 	
 	/**
-	 * Start the Agent, i.e., start listening and publishing
+	 * Start the Agent, i.e., start listening
 	 * @throws IOException
 	 */
 	public void start() throws IOException{
 		rabbitClient.startConsuming(con);
-		publisher.start();
 	}
 	
 	/**
@@ -108,7 +145,9 @@ public class Agent{
 	 * @param body
 	 * @throws IOException
 	 */
-	public void handler(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException{}
+	public void handler(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException{
+		//System.out.println("Received: "+new String(body));
+	}
 	
 	/**
 	 * Adds a <code>{@link Resolver}</code> to the resolver list.
@@ -141,8 +180,12 @@ public class Agent{
 		return rabbitClient;
 	}
 	
-	public void finalize() throws IOException, TimeoutException{
-		rabbitClient.close();
+	public void finalize(){
+		try {
+			rabbitClient.close();
+		} catch (IOException | TimeoutException e) {
+			e.printStackTrace();
+		}
 		resolvers.clear();
 	}
 }
