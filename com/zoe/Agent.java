@@ -66,8 +66,16 @@ public class Agent{
 	private JSONObject resolve(Intent intent, JSONObject main) throws NoResolverException{
 		for(String r : resolvers.keySet()){
 			if(r.equals(intent.name)){
-				JSONObject resolved = resolvers.get(r).resolve(intent, main);
-				resolved.put("data", name);
+				JSONObject resolved;
+				try{
+					resolved = resolvers.get(r).resolve(intent, main);
+					resolved.put("data", name);
+				}catch(IntentErrorException ex){
+					ex.printStackTrace();
+					resolved = resolvers.get(r).getErrorObject();
+					resolved.put("error", resolvers.get(r).getErrorMessage());
+					main.put("error", resolvers.get(r).getErrorMessage());
+				}
 				return resolved;
 			}
 		}	
@@ -95,6 +103,7 @@ public class Agent{
 		String[] keys = new String[1];
 		keys = json.keySet().toArray(keys);
 		keys = Util.sortAlphabetically(keys);
+		
 		for(int i = 0; i < keys.length; i++){
 			String key = keys[i]; //Current key
 			if(json.get(key) instanceof JSONObject){
@@ -119,8 +128,7 @@ public class Agent{
 		kk = resolved.keySet().toArray(kk);
 		for(String k : kk){
 			json.put(k, resolved.get(k));
-		}
-		
+		}		
 		return main;
 	}
 
