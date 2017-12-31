@@ -2,9 +2,20 @@ package com.zoe;
 
 import org.json.*;
 
-public interface Resolver {
-	public String name();
-	public JSONObject resolve(Intent intent, JSONObject full) throws IntentErrorException;
-	public JSONObject getErrorObject();
-	public String getErrorMessage();
+public abstract class Resolver {
+	private String name;
+	private String dataType;
+	
+	public Resolver(String name, String dataType){
+		this.name = name;
+		this.dataType = dataType;
+	}
+	public String getName(){
+		return name;
+	}
+	public String getDataType(){
+		return dataType;
+	}
+	public abstract JSONObject resolve(Intent intent, JSONObject full) throws IntentErrorException;
+	public abstract JSONObject getErrorObject(IntentErrorException ex);
 }
