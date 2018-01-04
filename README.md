@@ -2,7 +2,7 @@
 Java library for Zoe
 
 Dependencies:
-- AMQP Client (and its dependencies)
+- Apache Kafka
 - org.json
 
 Possible improvements:
