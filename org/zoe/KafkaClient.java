@@ -15,7 +15,7 @@ public class KafkaClient{
 	private KafkaConsumer<String, byte[]> consumer;
 	private KafkaProducer<String, byte[]> producer;
 
-	private static String url = "localhost:9092"; //TODO url
+	private static String url = System.getenv("KAFKA_SERVERS"); //TODO url
 	private static String topic = "zoe";
 	
 	public KafkaClient(String url, String group){
