@@ -1,5 +1,5 @@
 # zoe-java
-Java library for Zoe
+[Deprecated] Java library for Zoe
 
 Dependencies:
 - Apache Kafka
