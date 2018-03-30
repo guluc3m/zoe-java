@@ -2,9 +2,14 @@
 Java library for Zoe
 
 Dependencies:
-- Apache Kafka
-- org.json
+- Apache Kafka 1.1.0
+- JSON.org
 
-Possible improvements:
-- Agents could be marked with annotations instead of by implementing an Interface
-- Add functionality to prioritize nested intents with special characters
+JARs:
+- kafka-2.11-1.1.0.jar
+- kafka-clients-1.1.0.jar
+- log4j-1.2.17    
+- scala-library-2.11.12
+- slf4j-api-1.7.25
+- slf4j-log4j12-1.7.25
+
