@@ -76,13 +76,12 @@ public class Agent extends Thread{
 				JSONObject resolved;
 				try{
 					resolved = resolvers.get(r).resolve(intent, main);
-					resolved.put("data", resolvers.get(r).getDataType());
 				}catch(IntentErrorException ex){
 					ex.printStackTrace();
 					JSONObject error = resolvers.get(r).getErrorObject(ex);
 					resolved = new JSONObject();
 					resolved.put("error", error);
-					main.put("error", resolvers.get(r).getErrorObject(ex));
+					main.put("error", error);
 				}
 				return resolved;
 			}

@@ -8,17 +8,12 @@ import org.json.*;
  */
 public abstract class Resolver {
 	private String name;
-	private String dataType;
 	
 	public Resolver(String name, String dataType){
 		this.name = name;
-		this.dataType = dataType;
 	}
 	public String getName(){
 		return name;
-	}
-	public String getDataType(){
-		return dataType;
 	}
 	/**
 	 * This methods takes the intent of type {@code name} and should return the resolution. The resolved intent must NOT include the "data" field.
