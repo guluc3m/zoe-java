@@ -9,7 +9,7 @@ import org.json.*;
 public abstract class Resolver {
 	private String name;
 	
-	public Resolver(String name, String dataType){
+	public Resolver(String name){
 		this.name = name;
 	}
 	public String getName(){

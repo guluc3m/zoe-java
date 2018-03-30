@@ -19,7 +19,7 @@ public class DemoAgent {
 				System.out.println("Sent: "+json);
 			}
 		};
-		agent.addResolver(new Resolver("a", "ack"){
+		agent.addResolver(new Resolver("a"){
 
 			@Override
 			public JSONObject resolve(Intent intent, JSONObject full) throws IntentErrorException {

@@ -28,11 +28,12 @@ public class TestAgent {
 	 */
 	@Test
 	public void testInner() throws NotAnIntentException, NoResolverException, ErrorMessageException{
-		testAgent.addResolver(new Resolver("a", "ack"){
+		testAgent.addResolver(new Resolver("a"){
 
 			@Override
 			public JSONObject resolve(Intent intent, JSONObject full) throws IntentErrorException {
 				JSONObject dummy = new JSONObject();
+				dummy.put("data", "ack");
 				return dummy;
 			}
 
@@ -85,11 +86,12 @@ public class TestAgent {
 	 */
 	@Test
 	public void testOuter() throws NotAnIntentException, NoResolverException, ErrorMessageException{
-		testAgent.addResolver(new Resolver("b", "ack"){
+		testAgent.addResolver(new Resolver("b"){
 
 			@Override
 			public JSONObject resolve(Intent intent, JSONObject full) throws IntentErrorException {
 				JSONObject dummy = new JSONObject();
+				dummy.put("data", "ack");
 				return dummy;
 			}
 
@@ -124,7 +126,7 @@ public class TestAgent {
 	 */
 	@Test
 	public void testErrorOut() throws NotAnIntentException, NoResolverException, ErrorMessageException{
-		testAgent.addResolver(new Resolver("a", "ack"){
+		testAgent.addResolver(new Resolver("a"){
 			@Override
 			public JSONObject resolve(Intent intent, JSONObject full) throws IntentErrorException {
 				throw new IntentErrorException("This is the error message.");
@@ -133,6 +135,7 @@ public class TestAgent {
 			@Override
 			public JSONObject getErrorObject(IntentErrorException ex) {
 				JSONObject dummy = new JSONObject();
+				dummy.put("data", "ack");
 				dummy.put("dummy", "blah");
 				return dummy;
 			}			
@@ -190,10 +193,12 @@ public class TestAgent {
 	 */
 	@Test
 	public void testErrorIn() throws NoResolverException, NotAnIntentException, ErrorMessageException{
-		testAgent.addResolver(new Resolver("b", "ack"){
+		testAgent.addResolver(new Resolver("b"){
 
 			@Override
 			public JSONObject resolve(Intent intent, JSONObject full) throws IntentErrorException {
+				JSONObject dummy = new JSONObject();
+				dummy.put("data", "ack");
 				return new JSONObject();
 			}
 
@@ -235,11 +240,12 @@ public class TestAgent {
 	 */
 	@Test
 	public void testQuotations() throws NoResolverException, NotAnIntentException, ErrorMessageException{
-		testAgent.addResolver(new Resolver("a", "ack"){
+		testAgent.addResolver(new Resolver("a"){
 
 			@Override
 			public JSONObject resolve(Intent intent, JSONObject full) throws IntentErrorException {
 				JSONObject dummy = new JSONObject();
+				dummy.put("data", "ack");
 				return dummy;
 			}
 
