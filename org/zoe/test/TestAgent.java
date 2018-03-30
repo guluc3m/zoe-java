@@ -1,18 +1,21 @@
 package org.zoe.test;
 
-import static org.junit.Assert.*;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 import org.json.JSONObject;
-import org.junit.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.zoe.*;
 
 public class TestAgent {
 	private Agent testAgent;
 	
-	@Before
+	@BeforeEach
 	public void startAgent() throws IOException, TimeoutException{
 		testAgent = new Agent("test");
 	}
@@ -80,7 +83,7 @@ public class TestAgent {
 	 * @throws NoResolverException
 	 * @throws ErrorMessageException 
 	 */
-	@Test(expected = NoResolverException.class)
+	@Test
 	public void testOuter() throws NotAnIntentException, NoResolverException, ErrorMessageException{
 		testAgent.addResolver(new Resolver("b", "ack"){
 
@@ -110,7 +113,7 @@ public class TestAgent {
 		JSONObject innerIn = new JSONObject();
 		innerIn.put("intent", "a");
 		fullIn.put("args", innerIn);
-		testAgent.intentResolver(fullIn).toString();
+		assertThrows(NoResolverException.class, () -> testAgent.intentResolver(fullIn).toString());
 	}
 	
 	/**
@@ -185,7 +188,7 @@ public class TestAgent {
 	 * @throws NotAnIntentException
 	 * @throws ErrorMessageException
 	 */
-	@Test(expected = ErrorMessageException.class)
+	@Test
 	public void testErrorIn() throws NoResolverException, NotAnIntentException, ErrorMessageException{
 		testAgent.addResolver(new Resolver("b", "ack"){
 
@@ -222,7 +225,7 @@ public class TestAgent {
 		JSONObject args = new JSONObject();
 		args.put("error", error);
 		fullIn.put("args", args);
-		testAgent.intentResolver(fullIn);
+		assertThrows(ErrorMessageException.class, () -> testAgent.intentResolver(fullIn));
 	}
 	/**
 	 * In this test, the intent that the resolver can resolve is quoted, and thus it ignores the message
@@ -230,7 +233,7 @@ public class TestAgent {
 	 * @throws NotAnIntentException
 	 * @throws ErrorMessageException
 	 */
-	@Test(expected = NoResolverException.class)
+	@Test
 	public void testQuotations() throws NoResolverException, NotAnIntentException, ErrorMessageException{
 		testAgent.addResolver(new Resolver("a", "ack"){
 
@@ -260,6 +263,6 @@ public class TestAgent {
 		JSONObject innerIn = new JSONObject();
 		innerIn.put("intent", "a");
 		fullIn.put("args!", innerIn);
-		testAgent.intentResolver(fullIn).toString();		
+		assertThrows(NoResolverException.class, () -> testAgent.intentResolver(fullIn));
 	}
 }

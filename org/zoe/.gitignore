@@ -1,0 +1,9 @@
+/Agent.class
+/ErrorMessageException.class
+/Intent.class
+/IntentErrorException.class
+/KafkaClient.class
+/NoResolverException.class
+/NotAnIntentException.class
+/Resolver.class
+/Util.class

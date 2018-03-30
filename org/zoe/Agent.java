@@ -2,16 +2,17 @@ package org.zoe;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
  * This class defines an Agent, the core of the Zoe library.
- * TODO
  * @author danoloan10
  * @version v0.1
  * @since 25th October, 2017
@@ -51,8 +52,15 @@ public class Agent extends Thread{
 			}
 		}
 	}
-	
+	/**
+	 * This method will be executed at the time a record is received. Override if necessary
+	 * @param record
+	 */
 	public void onReception(ConsumerRecord<String, byte[]> record){}
+	/**
+	 * This method will be executed a the time a json is sent. Override if necessary
+	 * @param json
+	 */
 	public void onSending(JSONObject json){}
 	/**
 	 * This method resolves an intent and returns the resolution. The resolution is constructed by adding the data type of the resolver to the resolution. If an <code>{@link IntentErrorException}</code> has been thrown,
@@ -116,6 +124,23 @@ public class Agent extends Thread{
 			//Ignore quotations
 			if(key.substring(key.length()-1).equalsIgnoreCase("!"))
 				continue;
+			//If the element is an array, scan through the whole array for intents
+			if(json.get(key) instanceof JSONArray) {
+				JSONArray arr = json.getJSONArray(key);
+				Iterator<Object> it = arr.iterator();
+				while(it.hasNext()) {
+					Object current = it.next();
+					if(current instanceof JSONObject) {
+						try{
+							//If we find a JSONObject, we try to find there some Intents. If there are, they will be resolved
+							return intentResolver((JSONObject)current, main);					
+						}catch(NotAnIntentException ex){
+							//An exception will be thrown if we have reached and object with no more nested jsons, and that object is not an intent.
+							continue;
+						}
+					}
+				}
+			}
 			if(json.get(key) instanceof JSONObject){
 				try{
 					//If we find a JSONObject, we try to find there some Intents. If there are, they will be resolved
@@ -124,7 +149,7 @@ public class Agent extends Thread{
 					//An exception will be thrown if we have reached and object with no more nested jsons, and that object is not an intent.
 					continue;
 				}
-			}			
+			}
 		}
 		
 		//We resolve the intent and substitute it with the resolution 		

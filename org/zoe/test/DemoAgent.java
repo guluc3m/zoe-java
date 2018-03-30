@@ -11,7 +11,6 @@ public class DemoAgent {
 	public static void main(String args[]){
 		Agent agent;
 		agent = new Agent("a"){
-			@Override
 			public void onReception(ConsumerRecord<String, byte[]> record){
 				System.out.println("Recieved: "+new String(record.value()));
 			}
