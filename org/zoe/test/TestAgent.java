@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -135,7 +136,6 @@ public class TestAgent {
 			@Override
 			public JSONObject getErrorObject(IntentErrorException ex) {
 				JSONObject dummy = new JSONObject();
-				dummy.put("data", "ack");
 				dummy.put("dummy", "blah");
 				return dummy;
 			}			
@@ -269,6 +269,130 @@ public class TestAgent {
 		JSONObject innerIn = new JSONObject();
 		innerIn.put("intent", "a");
 		fullIn.put("args!", innerIn);
+		assertThrows(NoResolverException.class, () -> testAgent.intentResolver(fullIn));
+	}
+	/**
+	 * If there is an array, it will try to resolve the first intent the array has
+	 * @throws NoResolverException
+	 * @throws NotAnIntentException
+	 * @throws ErrorMessageException
+	 */
+	@Test
+	public void testArray() throws NoResolverException, NotAnIntentException, ErrorMessageException {
+		testAgent.addResolver(new Resolver("a"){
+
+			@Override
+			public JSONObject resolve(Intent intent, JSONObject full) throws IntentErrorException {
+				JSONObject dummy = new JSONObject();
+				dummy.put("data", "ack");
+				return dummy;
+			}
+
+			@Override
+			public JSONObject getErrorObject(IntentErrorException ex) {
+				return new JSONObject();					
+			}
+		});
+		
+		/*
+		 *	fullIn:
+		 *	{
+		 *		'data': 'hey',
+		 *		'params': [
+		 *			{
+		 *				'intent', 'a'
+		 *			},
+		 *			{
+		 *				'intent', 'b'
+		 *			}
+		 *		]
+		 *	} 
+		 */
+		JSONObject a0, b0, fullIn;
+		fullIn = new JSONObject();
+		a0 = new JSONObject();
+		b0 = new JSONObject();
+		JSONArray params0 = new JSONArray();
+		a0.put("intent", "a");
+		b0.put("intent", "b");
+		params0.put(a0);
+		params0.put(b0);
+		fullIn.put("data", "hey");
+		fullIn.put("params", params0);
+		String output = testAgent.intentResolver(fullIn).toString();
+		/*
+		 *	fullOut:
+		 *	{
+		 *		'data': 'hey',
+		 *		'params': [
+		 *			{
+		 *				'data': 'ack'
+		 *			},
+		 *			{
+		 *				'intent': 'b'
+		 *			}
+		 *		]
+		 *	} 
+		 */
+		JSONObject a, b, fullOut;
+		fullOut = new JSONObject();
+		a = new JSONObject();
+		b = new JSONObject();
+		JSONArray params = new JSONArray();
+		a.put("data", "ack");
+		b.put("intent", "b");
+		params.put(a);
+		params.put(b);
+		fullOut.put("data", "hey");
+		fullOut.put("params", params);
+		String expected = fullOut.toString();
+		assertEquals(expected, output);
+	}
+	/**
+	 * If there is an array, and there are no resolvers to resolve the first intent, ignore the message
+	 */
+	@Test
+	public void testArray2() {
+		testAgent.addResolver(new Resolver("b") {
+
+			@Override
+			public JSONObject resolve(Intent intent, JSONObject full) throws IntentErrorException {
+				JSONObject dummy = new JSONObject();
+				dummy.put("data", "ack");
+				return dummy;
+			}
+
+			@Override
+			public JSONObject getErrorObject(IntentErrorException ex) {
+				return new JSONObject();
+			}
+			
+			/*
+			 *	fullIn:
+			 *	{
+			 *		'data': 'hey',
+			 *		'params': [
+			 *			{
+			 *				'intent', 'a'
+			 *			},
+			 *			{
+			 *				'intent', 'b'
+			 *			}
+			 *		]
+			 *	} 
+			 */
+		});
+		JSONObject a0, b0, fullIn;
+		fullIn = new JSONObject();
+		a0 = new JSONObject();
+		b0 = new JSONObject();
+		JSONArray params0 = new JSONArray();
+		a0.put("intent", "a");
+		b0.put("intent", "b");
+		params0.put(a0);
+		params0.put(b0);
+		fullIn.put("data", "hey");
+		fullIn.put("params", params0);
 		assertThrows(NoResolverException.class, () -> testAgent.intentResolver(fullIn));
 	}
 }
