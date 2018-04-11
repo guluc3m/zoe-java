@@ -162,24 +162,20 @@ public class TestAgent {
 		/*
 		 * fullOut
 		 * {
-		 *     'error':{
-		 *         'dummy': 'blah'
-		 *     }
+		 *     'error': 'This is the error message.'
 		 *     'intent': 'b'
 		 *     'args':{
-		 *         'error':{
-		 *             'dummy': 'blah'
-		 *         }
+		 *         'error': 'This is the error message.'
+		 *         'dummy': 'blah'
 		 *     }
 		 * }
 		 */
-		JSONObject fullOut = new JSONObject();		
-		JSONObject error = new JSONObject();
-		error.put("dummy", "blah");		
-		fullOut.put("error", error);
+		JSONObject fullOut = new JSONObject();	
+		fullOut.put("error", "This is the error message.");
 		fullOut.put("intent", "b");		
 		JSONObject args = new JSONObject();
-		args.put("error", error);
+		args.put("error", "This is the error message.");
+		args.put("dummy", "blah");		
 		fullOut.put("args", args);
 		String expected = fullOut.toString();
 		

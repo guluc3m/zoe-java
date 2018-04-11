@@ -6,10 +6,10 @@ public class IntentErrorException extends Exception {
 	
 	public IntentErrorException(){super();}
 	public IntentErrorException(String message){
-		super("Error in intent resolution.\n"+message);
+		super(message);
 	}
 	public IntentErrorException(String message, Throwable cause) { 
-		super("Error in intent resolution.\n"+message, cause); 
+		super(message, cause); 
 	}
 	public IntentErrorException(Throwable cause) { 
 		super(cause); 
