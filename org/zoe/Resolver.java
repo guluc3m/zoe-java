@@ -24,7 +24,8 @@ public abstract class Resolver {
 	 */
 	public abstract JSONObject resolve(Intent intent, JSONObject full) throws IntentErrorException;
 	/**
-	 * This method takes the error occurred during intent resolving and should return the error object to be included along the error message
+	 * This method takes the error occurred during intent resolving and should return the error object to be included along the error message. 
+	 * If the returned object does not contain an error key, a default one will be inserted with the message of the exception thrown.
 	 * @param ex Exception occurred
 	 * @return Error object to be appended
 	 */

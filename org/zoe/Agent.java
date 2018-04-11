@@ -79,9 +79,9 @@ public class Agent extends Thread{
 				}catch(IntentErrorException ex){
 					ex.printStackTrace();
 					JSONObject error = resolvers.get(r).getErrorObject(ex);
-					resolved = new JSONObject();
-					resolved.put("error", error);
-					main.put("error", error);
+					if(!error.has("error")) error.put("error", ex.getMessage());
+					resolved = error;
+					main.put("error", error.get("error"));
 				}
 				return resolved;
 			}
