@@ -1,6 +1,8 @@
 # zoe-java
 Java library for Zoe
 
+Zoe documentation: https://zoe.readthedocs.io/en/latest/
+
 Dependencies:
 - Apache Kafka 1.1.0
 - JSON.org
